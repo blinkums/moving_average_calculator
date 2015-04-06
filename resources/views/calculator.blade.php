@@ -16,7 +16,6 @@
         {!! Form::textarea('values', null, ['class' => 'span4', 'rows' => '20']) !!}
         <br>
         {!! Form::label('interval', 'Interval') !!}
-        Do not change
         {!! Form::text('interval', '7', ['class' => 'span1']) !!}
         <br>
         {!! Form::submit('Calculate', ['class' => 'btn btn-primary']) !!}

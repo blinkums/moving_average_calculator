@@ -2,32 +2,9 @@
 
 class CalculatorController extends Controller {
 
-    /*
-    |--------------------------------------------------------------------------
-    | Welcome Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller renders the "marketing page" for the application and
-    | is configured to only allow guests. Like most of the other sample
-    | controllers, you are free to modify or remove it as you desire.
-    |
-    */
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->middleware('guest');
-    }
-
-    /**
-     * Show the application welcome screen to the user.
-     *
-     * @return Response
-     */
+    private $movingAverage = 0;
+    private $movingAverageArray = [];
+ 
     public function index()
     {
         return view('calculator');
@@ -36,37 +13,71 @@ class CalculatorController extends Controller {
     public function calculate()
     {
         $values = \Input::get('values');
+        $values = $this->textAreaToArray($values);
+
+        $interval = \Input::get('interval');
+        $this->validateIntervalInput($interval);
+        
+        foreach ($values as $key => $value)
+        {
+            $this->excludeBeginningValues($key, $interval, $values);
+        }
+        $this->echoValues();
+    }   
+
+    private function textAreaToArray($values)
+    {
         $values = str_replace("\r", "\n", str_replace("\r\n", "\n", $values));
         $values = explode("\n", $values);
         $values = array_filter($values);
 
-        $interval = \Input::get('interval');
+        return $values;
+    }
 
-        foreach ($values as $valueKey => $value)
+    private function validateIntervalInput($interval)
+    {
+        if ($interval < 0)
         {
-            if ($valueKey >= $interval)
-            {
-                $movingAverage =
-                    ($values[$valueKey - ($interval - 6)] +
-                        $values[$valueKey - ($interval - 5)] +
-                        $values[$valueKey - ($interval - 4)] +
-                            $values[$valueKey - ($interval - 3)] +
-                                $values[$valueKey - ($interval - 2)] +
-                                    $values[$valueKey - ($interval - 1)] +
-                        $values[$valueKey - $interval] +
-                        $values[$valueKey])
-                    / ($interval + 1);
-
-                echo $movingAverage.'<br>';
-            }
+            throw new \Exception('Non-negative numbers only');
         }
     }
 
-    public function add($int1, $int2)
+    private function excludeBeginningValues($key, $interval, $values)
     {
-        $result = $int1 + $int2;
+        if ($key >= $interval)
+        {
+            $this->calculateMovingAverage($interval, $values, $key);
 
-        return $result;
+            $this->movingAverage = round($this->movingAverage, 1);
+
+            $this->movingAverageArray[] = $this->movingAverage;
+                
+            $this->resetMovingAverage();
+        }
     }
 
+    private function calculateMovingAverage($interval, $array, $key)
+    {
+        $x = 0;
+
+        while ($x <= $interval)
+        {
+            $this->movingAverage += $array[$key - ($interval - $x)];
+            $x++;
+        }
+        $this->movingAverage /= $interval + 1;
+    }
+
+    private function resetMovingAverage()
+    {
+        $this->movingAverage = 0;
+    }
+
+    private function echoValues()
+    {
+        foreach ($this->movingAverageArray as $value)
+        {
+            echo $value . '<br>';
+        }
+    }
 }
