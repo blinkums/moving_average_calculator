@@ -75,9 +75,21 @@ class CalculatorController extends Controller {
 
     private function echoValues()
     {
+        $this->showChange();
+
         foreach ($this->movingAverageArray as $value)
         {
             echo $value . '<br>';
         }
+    }
+
+    private function showChange()
+    {
+        $count = count($this->movingAverageArray);
+
+        $difference = $this->movingAverageArray[$count - 1] - $this->movingAverageArray[0];
+
+        echo 'Total difference = ' . round($difference, 2) . '<br>';
+        echo 'Average change per week ' . round($difference / ($count / 7), 2) . '<br><br>';
     }
 }
